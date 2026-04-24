@@ -175,11 +175,11 @@ static int curlGet(const FetchArgument &argument, FetchResult &result)
             auto header = x.first + ": " + x.second;
             header_list = curl_slist_append(header_list, header.data());
         }
-        if(!argument.request_headers->contains("User-Agent"))
+        if(argument.request_headers->contains("User-Agent"))
+            curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, (*argument.request_headers).at("User-Agent").data());
+        else
             curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, user_agent_str);
     }
-    header_list = curl_slist_append(header_list, "SubConverter-Request: 1");
-    header_list = curl_slist_append(header_list, "SubConverter-Version: " VERSION);
     if(header_list)
         curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, header_list);
 

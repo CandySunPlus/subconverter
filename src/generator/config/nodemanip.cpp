@@ -42,6 +42,15 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
     string_icase_map *request_headers = parse_set.request_header;
     bool &authorized = parse_set.authorized;
 
+    string_icase_map merged_headers;
+    if(!parse_set.custom_user_agent.empty())
+    {
+        if(request_headers)
+            merged_headers = *request_headers;
+        merged_headers["User-Agent"] = parse_set.custom_user_agent;
+        request_headers = &merged_headers;
+    }
+
     ConfType linkType = ConfType::Unknow;
     std::vector<Proxy> nodes;
     Proxy node;
