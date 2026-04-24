@@ -128,7 +128,8 @@ bool applyMatcher(const std::string &rule, std::string &real_rule, const Proxy &
         {ProxyType::SOCKS5,       "SOCKS5"},
         {ProxyType::WireGuard,    "WIREGUARD"},
         {ProxyType::Hysteria,     "HYSTERIA"},
-        {ProxyType::Hysteria2,    "HYSTERIA2"}
+        {ProxyType::Hysteria2,    "HYSTERIA2"},
+        {ProxyType::VLESS,        "VLESS"}
     };
     if(startsWith(rule, "!!GROUP="))
     {
@@ -557,6 +558,43 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
                 singleproxy["cwnd"] = x.CWND;
             if (x.HopInterval)
                 singleproxy["hop-interval"] = x.HopInterval;
+            break;
+        case ProxyType::VLESS:
+            singleproxy["type"] = "vless";
+            singleproxy["uuid"] = x.UserId;
+            singleproxy["tls"] = x.TLSSecure;
+            if(!x.Flow.empty())
+                singleproxy["flow"] = x.Flow;
+            if(!scv.is_undef())
+                singleproxy["skip-cert-verify"] = scv.get();
+            if(!x.RealityPublicKey.empty())
+            {
+                singleproxy["reality-opts"]["public-key"] = x.RealityPublicKey;
+                if(!x.RealityShortId.empty())
+                    singleproxy["reality-opts"]["short-id"] = x.RealityShortId;
+            }
+            if(!x.Host.empty())
+                singleproxy["servername"] = x.Host;
+            if(!x.ClientFingerprint.empty())
+                singleproxy["client-fingerprint"] = x.ClientFingerprint;
+            switch(hash_(x.TransferProtocol))
+            {
+            case "tcp"_hash:
+                break;
+            case "ws"_hash:
+                singleproxy["network"] = x.TransferProtocol;
+                singleproxy["ws-opts"]["path"] = x.Path;
+                if(!x.Host.empty())
+                    singleproxy["ws-opts"]["headers"]["Host"] = x.Host;
+                break;
+            case "grpc"_hash:
+                singleproxy["network"] = x.TransferProtocol;
+                if(!x.Path.empty())
+                    singleproxy["grpc-opts"]["grpc-service-name"] = x.Path;
+                break;
+            default:
+                break;
+            }
             break;
         default:
             continue;
