@@ -4,5 +4,6 @@ cmake-build-debug
 .idea
 base/cache
 base/subconverter
+base/pref.toml
 build
 compile_commands.json
