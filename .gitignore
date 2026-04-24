@@ -3,4 +3,6 @@ subconverter.exe
 cmake-build-debug
 .idea
 base/cache
+base/subconverter
 build
+compile_commands.json
