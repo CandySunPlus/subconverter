@@ -1,4 +1,4 @@
-FROM alpine:3.16 AS builder
+FROM alpine:latest AS builder
 LABEL maintainer="tindy.it@gmail.com"
 ARG THREADS="4"
 ARG SHA=""
@@ -6,6 +6,7 @@ ARG SHA=""
 # build minimized
 WORKDIR /
 RUN set -xe && \
+    sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
     apk add --no-cache --virtual .build-tools git g++ build-base linux-headers cmake python3 && \
     apk add --no-cache --virtual .build-deps curl-dev rapidjson-dev pcre2-dev yaml-cpp-dev && \
     git clone https://github.com/ftk/quickjspp --depth=1 && \
@@ -35,20 +36,18 @@ RUN set -xe && \
     cmake -DCMAKE_CXX_STANDARD=11 . && \
     make install -j $THREADS && \
     cd .. && \
-    git clone https://github.com/tindy2013/subconverter --depth=1 && \
+    git clone https://github.com/CandySunPlus/subconverter.git --depth=1 && \
     cd subconverter && \
     [ -n "$SHA" ] && sed -i 's/\(v[0-9]\.[0-9]\.[0-9]\)/\1-'"$SHA"'/' src/version.h;\
-    python3 -m ensurepip && \
-    python3 -m pip install gitpython && \
-    python3 scripts/update_rules.py -c scripts/rules_config.conf && \
     cmake -DCMAKE_BUILD_TYPE=Release . && \
     make -j $THREADS
 
 # build final image
-FROM alpine:3.16
-LABEL maintainer="tindy.it@gmail.com"
+FROM alpine:latest
+LABEL maintainer="candysfm@gmail.com"
 
-RUN apk add --no-cache --virtual subconverter-deps pcre2 libcurl yaml-cpp
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
+    apk add --no-cache --virtual subconverter-deps pcre2 libcurl yaml-cpp
 
 COPY --from=builder /subconverter/subconverter /usr/bin/
 COPY --from=builder /subconverter/base /base/
