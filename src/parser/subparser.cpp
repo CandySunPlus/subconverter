@@ -1181,7 +1181,21 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes)
         singleproxy["port"] >>= port;
         singleproxy["underlying-proxy"] >>= underlying_proxy;
         if(port.empty() || port == "0")
-            continue;
+        {
+            // hysteria2 may use a port range (ports: "21600-21799") with no single port field
+            if(proxytype == "hysteria2")
+            {
+                std::string multi_ports;
+                singleproxy["ports"] >>= multi_ports;
+                if(multi_ports.empty())
+                    continue;
+                port = multi_ports.substr(0, multi_ports.find('-'));
+                if(port.empty() || port == "0")
+                    continue;
+            }
+            else
+                continue;
+        }
         udp = safe_as<std::string>(singleproxy["udp"]);
         tfo = safe_as<std::string>(singleproxy["fast-open"]);
         scv = safe_as<std::string>(singleproxy["skip-cert-verify"]);
@@ -1431,7 +1445,7 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes)
             singleproxy["cwnd"] >>= cwnd;
             singleproxy["hop-interval"] >>= hop_interval;
 
-            hysteria2Construct(node, group, ps, server, port, ports, up, down, password, obfs, obfs_password, sni, fingerprint, ca, ca_str, cwnd, alpn, hop_interval, tfo, scv, underlying_proxy);
+            hysteria2Construct(node, group, ps, server, port, ports, up, down, password, obfs, obfs_password, sni, fingerprint, alpn, ca, ca_str, cwnd, hop_interval, tfo, scv, underlying_proxy);
             break;
         case "vless"_hash:
         {
